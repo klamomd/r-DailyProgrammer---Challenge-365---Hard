@@ -8,7 +8,6 @@ namespace _365H___Tesselations_and_Tilings
 {
     class Program
     {
-        //static char[,] exampleTile = new char[,] { { '1', '2', '3', '4' }, { '5', '6', '7', '8' }, { '9', 'A', 'B', 'C' }, { 'D', 'E', 'F', 'G' } };
         const string quitString = "\\q";
 
         static void Main(string[] args)
@@ -178,58 +177,29 @@ namespace _365H___Tesselations_and_Tilings
             if (tesselationWidthInTiles < 1) throw new ArgumentOutOfRangeException("tesselationWidthInTiles", "tesselationWidthInTiles must be at least 1.");
             if (rotationAnglePerTesselation % 90 != 0) throw new ArgumentException("rotationAnglePerTesselation must be a multiple of 90.", "rotationAnglePerTesselation");
 
-            // Because of the way tesselation works, once we generate the first 2 rows, we can reuse those rows multiple times to generate the entirety of the tesselation.
-            List<char[,]> tileRowOdd = new List<char[,]>();
-            List<char[,]> tileRowEven = new List<char[,]>();
+            List<List<char[,]>> tileRows = new List<List<char[,]>>();
 
-            // Store a copy of the rotated tiles for later use.
-            char[,] rotatedOnce = RotateTile(tile, rotationAnglePerTesselation);
-            char[,] rotatedTwice = RotateTile(tile, rotationAnglePerTesselation * 2);
-            char[,] rotatedThrice = RotateTile(tile, rotationAnglePerTesselation * 3);
-
-            //char[,] tile90 = RotateTile(tile, 90);
-            //char[,] tile180 = RotateTile(tile, 180);
-            //char[,] tile270 = RotateTile(tile, 270);
-
-            // Generate the first two rows of tiles.
-            // tileRowOdd (the first row) will always be alternating between a non-rotated tile, and a once-rotated tile.
-            // tileRowEven (the second row) will always be alternating between a thrice-rotated tile, and a twice-rotated tile.
-            for (int i = 0; i < tesselationWidthInTiles; i++)
+            for (int row=0; row < tesselationWidthInTiles; row++)
             {
-                // Evens.
-                if (i % 2 == 0)
+                List<char[,]> currentTileRow = new List<char[,]>();
+                for (int col=0; col < tesselationWidthInTiles; col++)
                 {
-                    tileRowOdd.Add(tile);
-                    tileRowEven.Add(rotatedThrice);
+                    // According to the problem description, it can be determined that the location of a tile affects its rotation.
+                    // Every additional column and row indicates an additional rotation around the rotation angle.
+                    // So we can find the number of rotations by adding the row and column and getting the remainder after dividing by 4.
+                    int timesToRotate = (row + col) % 4;
+                    currentTileRow.Add(RotateTile(tile, rotationAnglePerTesselation * timesToRotate));
                 }
-                // Odds.
-                else
-                {
-                    tileRowOdd.Add(rotatedOnce);
-                    tileRowEven.Add(rotatedTwice);
-                }
+                tileRows.Add(currentTileRow);
             }
-
-            // Combine the tile rows into lists of strings for easier manipulation.
-            List<string> tileRowOddStrings = CombineTileRow(tileRowOdd);
-            List<string> tileRowEvenStrings = CombineTileRow(tileRowEven);
 
             // Create a list to contain the final string representation.
             List<string> resultingStrings = new List<string>();
-            
-            // Loop through the tesselation width and generate that many rows by copying the appropriate odd/even string set.
-            for (int i = 1; i <= tesselationWidthInTiles; i++)      // Note that we start from 1 to get things ordered properly. Starting from 0 ends up swapping the rows.
+
+            // Combine all tile rows and add them to the resultingStrings list.
+            foreach (var row in tileRows)
             {
-                // Evens.
-                if (i % 2 == 0)
-                {
-                    resultingStrings.AddRange(tileRowEvenStrings);
-                }
-                // Odds.
-                else
-                {
-                    resultingStrings.AddRange(tileRowOddStrings);
-                }
+                resultingStrings.AddRange(CombineTileRow(row));
             }
 
             return resultingStrings;
